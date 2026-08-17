@@ -1,0 +1,54 @@
+services:
+  - type: web
+    name: learnchinese
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        fromDatabase:
+          name: learnchinese-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CLIENT_URL
+        value: https://learnchinese.onrender.com
+      - key: PAYMENT_MODE
+        value: production
+      - key: PAYMENT_PROVIDER
+        value: alipay
+      # 支付宝商户配置（有就填，没有则走个人收款码）
+      - key: ALIPAY_APP_ID
+        sync: false
+      - key: ALIPAY_PRIVATE_KEY
+        sync: false
+      - key: ALIPAY_PUBLIC_KEY
+        sync: false
+      - key: ALIPAY_NOTIFY_URL
+        value: https://learnchinese.onrender.com/api/payments/notify/alipay
+      - key: ALIPAY_RETURN_URL
+        value: https://learnchinese.onrender.com/account
+      # 微信商户配置
+      - key: WECHAT_APPID
+        sync: false
+      - key: WECHAT_MCHID
+        sync: false
+      - key: WECHAT_API_V3_KEY
+        sync: false
+      - key: WECHAT_SERIAL_NO
+        sync: false
+      - key: WECHAT_PRIVATE_KEY_PATH
+        sync: false
+      - key: WECHAT_NOTIFY_URL
+        value: https://learnchinese.onrender.com/api/payments/notify/wechat
+
+databases:
+  - name: learnchinese-db
+    plan: free
+    region: singapore

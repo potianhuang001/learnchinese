@@ -1,0 +1,61 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# build outputs
+dist/
+build/
+*.local
+
+# client build artifacts & vite cache
+client/dist/
+client/dist_old_*/
+client/.dist-prev*/
+client/.dist-prev-*/
+*.timestamp-*.mjs
+vite.config.js.timestamp-*.mjs
+
+# server temp fix / scan artifacts
+server/.tmp*
+.tmp_*.json
+.tmp_reg.json
+
+# env files
+.env
+.env.local
+.env.production
+
+# logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# testing
+coverage/
+.nyc_output/
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
+
+# misc
+*.pem
+*.swp
+
+# npm cache (large, not needed)
+.npm-cache/
+
+# agent memory (private)
+.workbuddy/
+
+# local smoke/test artifacts
+.smoke*.json
+.tmp_reg.json
+.smoke-test.js
+
+# dev-only convenience launcher
+dev-server.js
