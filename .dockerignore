@@ -1,0 +1,36 @@
+# dependencies
+node_modules
+**/node_modules
+
+# git & agent memory
+.git
+.workbuddy
+
+# npm cache (large)
+.npm-cache
+
+# env / secrets
+.env
+**/.env
+
+# build artifacts (rebuilt inside image)
+client/dist
+server/dist
+
+# server temp fix / scan artifacts
+server/.tmp*
+
+# local smoke / test artifacts
+.tmp*
+.smoke*
+.tmp_reg.json
+dev-server.js
+
+# logs
+*.log
+
+# docker / docs (not needed in image)
+Dockerfile
+.dockerignore
+README.md
+DEPLOY.md

@@ -1,15 +1,18 @@
-# LearnChinese 部署指南（预算 0，全免费）
+# LearnChinese 部署指南（预算 0，全免费，不用绑卡）
 
 代码已经推到 GitHub：`https://github.com/potianhuang001/learnchinese`
-本指南带你用 **Render（免费 Web 服务）+ MongoDB Atlas（免费数据库）** 把网站跑起来。
 
-> 免费套餐限制：15 分钟没人访问会休眠，下次访问要等约 30 秒唤醒。初期运营完全够用。
+本指南带你用 **Hugging Face Spaces（免费 Docker 服务，无需信用卡）+ MongoDB Atlas（免费数据库）** 把网站跑起来。
+（如果你以后有信用卡，也可以改用 Render，见文末「备选方案」。）
+
+> ⚠️ 免费套餐限制：一段时间没人访问，实例会休眠，下次访问要等约 30–60 秒唤醒。初期运营完全够用。
+> 🌏 面向外国学员访问正常；**你本人在中国大陆管理后台时**可能偏慢或偶发打不开，可挂代理，或后期升级/换平台解决。
 
 ---
 
 ## 第 0 步：准备一个免费的 MongoDB 数据库（必须，约 5 分钟）
 
-Render **不提供** MongoDB，所以用免费的 MongoDB Atlas：
+Hugging Face **不提供** MongoDB，所以用免费的 MongoDB Atlas（注册**不用信用卡**）：
 
 1. 打开 https://www.mongodb.com/atlas  → 注册/登录（用邮箱）
 2. 创建免费集群：**Create → Shared (M0) → 选区域（推荐 Singapore）→ Create Cluster**
@@ -22,21 +25,24 @@ Render **不提供** MongoDB，所以用免费的 MongoDB Atlas：
 
 ---
 
-## 第 1 步：在 Render 上部署（约 5 分钟）
+## 第 1 步：在 Hugging Face 上部署（约 5 分钟，不用绑卡）
 
-1. 打开 https://render.com → 用 **GitHub 账号** 登录（授权 Render 访问仓库）
-2. Dashboard 点 **New + → Blueprint**
-3. 选仓库 **learnchinese**
-4. Render 自动读取仓库里的 `render.yaml`
-5. 点 **Apply** 开始创建（先不用管环境变量）
+1. 打开 https://huggingface.co → 用邮箱注册并登录（**不用信用卡**）
+2. 右上角头像 → **New Space**
+3. Space 名字填 `learnchinese`，**SDK 选 `Docker`**，选 **Public**（免费），点 **Create Space**
+4. 创建后进入 Space 页面 → 左侧 **Settings → Repository → 连接 GitHub 仓库**
+   （或直接在 Space 的文件里关联 `potianhuang001/learnchinese` 这个仓库）
+5. HF 会自动读取仓库根目录的 `Dockerfile` 并构建镜像、启动服务
+   - 构建通常需要 3–8 分钟，可在 Space 的 **Logs / Building** 标签看进度
+6. 构建完成后，你的网址类似：`https://potianhuang001-learnchinese.hf.space`
 
-创建好后，Render 会给你一个网址，类似 `https://learnchinese.onrender.com`
+> 如果你在第 4 步选的是「空白 Space + Docker」，HF 会直接用仓库里的 `Dockerfile`，无需手动写任何文件。
 
 ---
 
 ## 第 2 步：填入数据库地址 + 密钥（重要）
 
-在 Render Dashboard → 你的 Web Service → **Environment** 里，找到/添加这些变量：
+在 Hugging Face Space 页面 → **Settings → Variables and Secrets** 里，添加这些变量：
 
 | Key | Value |
 |---|---|
@@ -44,16 +50,15 @@ Render **不提供** MongoDB，所以用免费的 MongoDB Atlas：
 | `JWT_SECRET` | 随便一段长随机字符串（至少 32 位，如 `abc123...随机`） |
 | `ADMIN_PASSWORD` | 你想用的管理员密码（别用默认） |
 
-> 其余变量（`PAYMENT_MODE=production`、`AUTO_SEED=true` 等）`render.yaml` 已自动设好，不用动。
-
-改完点 **Save Changes**，Render 会自动重新部署。
+> `PAYMENT_MODE=production`、`AUTO_SEED=true`、`NODE_ENV=production` 已在 `Dockerfile` 里设好，不用动。
+> 添加/修改变量后，HF 会自动重新部署（约 1–2 分钟）。
 
 ---
 
 ## 第 3 步：首次访问，自动灌数据
 
 部署完成后直接打开你的网址。服务器启动时会**自动**把 24 节课、72 道题、会员套餐、管理员账号灌进数据库（幂等，不会重复）。
-如果数据库是空的，等 1–2 分钟再刷新即可。
+如果页面空白，等 1–2 分钟再刷新即可（首次启动要连库 + 灌数据）。
 
 管理员默认账号：
 - 邮箱：`admin@learnchinese.app`
@@ -67,7 +72,7 @@ Render **不提供** MongoDB，所以用免费的 MongoDB Atlas：
 - `client/public/qr/alipay.jpg`
 - `client/public/qr/wechat.jpg`
 
-要换码：替换这两个文件 → 提交 → 重新部署。
+要换码：替换这两个文件 → 提交 → 重新部署（HF 会自动重建）。
 
 ---
 
@@ -83,7 +88,19 @@ Render **不提供** MongoDB，所以用免费的 MongoDB Atlas：
 ## 想升级为自动收款（可选，需营业执照）
 
 当前是"个人收款码 + 人工审核"。若有企业/个体户资质，可申请支付宝/微信商户，
-在 Render 环境变量填 `ALIPAY_*` / `WECHAT_*` 后自动回调，无需人工审核。
+在环境变量填 `ALIPAY_*` / `WECHAT_*` 后自动回调，无需人工审核。
+
+---
+
+## 备选方案：Render（需要绑信用卡，免费层不扣费）
+
+如果你有国内 Visa/万事达**双币信用卡**，也可以改用 Render（体验更稳、不休眠或休眠策略不同）：
+
+1. https://render.com → 用 GitHub 登录 → **New + → Blueprint** → 选 `learnchinese` 仓库 → **Apply**
+2. 在 Web Service → **Environment** 加 `MONGODB_URI` / `JWT_SECRET` / `ADMIN_PASSWORD`
+3. 打开给你的网址即可
+
+> Render 绑卡只是身份核验，免费实例本身 0 费用。
 
 ---
 
@@ -91,4 +108,4 @@ Render **不提供** MongoDB，所以用免费的 MongoDB Atlas：
 
 1. `JWT_SECRET` 必须用强随机值，别用默认
 2. 改掉默认管理员密码
-3. 私钥/密码只填在 Render 环境变量，**不要**写进代码或 `.env` 提交
+3. 私钥/密码只填在平台的环境变量，**不要**写进代码或 `.env` 提交
