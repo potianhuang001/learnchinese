@@ -1182,9 +1182,8 @@ const lessonsData = [
 
 /* ---------------- 执行逻辑 ---------------- */
 
-async function seed() {
-  await connectDB();
-  console.log('[SEED] Connected to MongoDB');
+async function runSeed() {
+  console.log('[SEED] Starting auto-seed (idempotent)...');
 
   // 0) --reset：重建课程相关数据（管理员账号与套餐保留）
   if (RESET) {
@@ -1278,13 +1277,23 @@ async function seed() {
   };
   console.log('[SEED] Done. New lessons created:', created, '| plans created:', plansCreated);
   console.log('[SEED] Collection counts:', JSON.stringify(counts));
+}
 
+// CLI 入口：独立运行 seed 时负责连接/断开
+async function seed() {
+  await connectDB();
+  await runSeed();
   await disconnectDB();
 }
 
-seed()
-  .then(() => process.exit(0))
-  .catch((err) => {
-    console.error('[SEED] Failed:', err.message);
-    process.exit(1);
-  });
+module.exports = { runSeed };
+
+// 仅当作为脚本直接运行时才连接/断开并退出；被 server.js 引用时不触发
+if (require.main === module) {
+  seed()
+    .then(() => process.exit(0))
+    .catch((err) => {
+      console.error('[SEED] Failed:', err.message);
+      process.exit(1);
+    });
+}

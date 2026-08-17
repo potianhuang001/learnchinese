@@ -6,15 +6,19 @@ services:
     region: singapore
     buildCommand: npm install && npm run build
     startCommand: npm start
+    healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
         value: 10000
+      # ⚠️ Render 不提供托管 MongoDB，请填写免费的 MongoDB Atlas 连接串：
+      #   1) 注册 https://www.mongodb.com/atlas 免费 M0 集群
+      #   2) 创建数据库用户，白名单填 0.0.0.0/0
+      #   3) 复制 "Driver" 连接串（Node.js / 3.6+），替换 <password>
+      #   4) 粘贴到 Render 后台本变量的 value 里
       - key: MONGODB_URI
-        fromDatabase:
-          name: learnchinese-db
-          property: connectionString
+        sync: false
       - key: JWT_SECRET
         generateValue: true
       - key: CLIENT_URL
@@ -23,7 +27,9 @@ services:
         value: production
       - key: PAYMENT_PROVIDER
         value: alipay
-      # 支付宝商户配置（有就填，没有则走个人收款码）
+      - key: AUTO_SEED
+        value: "true"
+      # 支付宝/微信商户配置（有就填，没有则走个人收款码 qr）
       - key: ALIPAY_APP_ID
         sync: false
       - key: ALIPAY_PRIVATE_KEY
@@ -34,7 +40,6 @@ services:
         value: https://learnchinese.onrender.com/api/payments/notify/alipay
       - key: ALIPAY_RETURN_URL
         value: https://learnchinese.onrender.com/account
-      # 微信商户配置
       - key: WECHAT_APPID
         sync: false
       - key: WECHAT_MCHID
@@ -47,8 +52,3 @@ services:
         sync: false
       - key: WECHAT_NOTIFY_URL
         value: https://learnchinese.onrender.com/api/payments/notify/wechat
-
-databases:
-  - name: learnchinese-db
-    plan: free
-    region: singapore

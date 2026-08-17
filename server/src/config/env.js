@@ -21,6 +21,7 @@ const env = {
   // 配置了对应商户号后会自动启用真实支付；未配置则降级为 qr（个人收款码）
   PAYMENT_MODE: process.env.PAYMENT_MODE || 'dev',
   PAYMENT_PROVIDER: process.env.PAYMENT_PROVIDER || 'alipay', // 真实模式下默认渠道
+  AUTO_SEED: process.env.AUTO_SEED || 'true', // 启动自动灌库（设 false 关闭）
   // 微信支付（Native 扫码）商户配置
   WECHAT_APPID: process.env.WECHAT_APPID || '',
   WECHAT_MCHID: process.env.WECHAT_MCHID || '',
