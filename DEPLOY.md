@@ -1,163 +1,94 @@
-# LearnChinese 部署指南
+# LearnChinese 部署指南（预算 0，全免费）
 
-## 方案：Render 免费套餐（零预算）
+代码已经推到 GitHub：`https://github.com/potianhuang001/learnchinese`
+本指南带你用 **Render（免费 Web 服务）+ MongoDB Atlas（免费数据库）** 把网站跑起来。
 
-因为预算为 0，我们使用 **Render** 的免费 Web Service + 免费 PostgreSQL（这里用 MongoDB，Render 也提供免费 MongoDB 替代品，或 MongoDB Atlas 免费层）。
-
-> 免费套餐限制：服务会在 15 分钟无访问后进入休眠，首次访问需等待 30 秒左右唤醒。对初期运营足够。
+> 免费套餐限制：15 分钟没人访问会休眠，下次访问要等约 30 秒唤醒。初期运营完全够用。
 
 ---
 
-## 已准备好的文件
+## 第 0 步：准备一个免费的 MongoDB 数据库（必须，约 5 分钟）
 
-| 文件 | 作用 |
+Render **不提供** MongoDB，所以用免费的 MongoDB Atlas：
+
+1. 打开 https://www.mongodb.com/atlas  → 注册/登录（用邮箱）
+2. 创建免费集群：**Create → Shared (M0) → 选区域（推荐 Singapore）→ Create Cluster**
+3. 创建数据库用户：**Security → Database Access → Add New Database User**
+   - 用户名随便（如 `learnch`）、密码记好
+4. 允许联网：**Security → Network Access → Add IP Address → 填 `0.0.0.0/0`（允许任何 IP）→ Confirm**
+5. 拿连接串：**Clusters → Connect → Connect your application → 选 Node.js → 复制那串**
+   长这样：`mongodb+srv://learnch:<password>@cluster0.xxxx.mongodb.net/?retryWrites=true&w=majority`
+   ⚠️ 把里面的 `<password>` 换成第 3 步设的密码
+
+---
+
+## 第 1 步：在 Render 上部署（约 5 分钟）
+
+1. 打开 https://render.com → 用 **GitHub 账号** 登录（授权 Render 访问仓库）
+2. Dashboard 点 **New + → Blueprint**
+3. 选仓库 **learnchinese**
+4. Render 自动读取仓库里的 `render.yaml`
+5. 点 **Apply** 开始创建（先不用管环境变量）
+
+创建好后，Render 会给你一个网址，类似 `https://learnchinese.onrender.com`
+
+---
+
+## 第 2 步：填入数据库地址 + 密钥（重要）
+
+在 Render Dashboard → 你的 Web Service → **Environment** 里，找到/添加这些变量：
+
+| Key | Value |
 |---|---|
-| `render.yaml` | Render Blueprint，一键创建 Web Service + MongoDB |
-| `package.json`（根目录） | Render 构建/启动入口 |
-| `server/src/app.js` | 生产环境自动托管 `client/dist` 静态文件 |
-| `client/public/qr/` | 支付宝/微信个人收款码图片 |
-| `server/.env.example` | 环境变量模板 |
+| `MONGODB_URI` | 第 0 步复制的连接串（替换好密码） |
+| `JWT_SECRET` | 随便一段长随机字符串（至少 32 位，如 `abc123...随机`） |
+| `ADMIN_PASSWORD` | 你想用的管理员密码（别用默认） |
+
+> 其余变量（`PAYMENT_MODE=production`、`AUTO_SEED=true` 等）`render.yaml` 已自动设好，不用动。
+
+改完点 **Save Changes**，Render 会自动重新部署。
 
 ---
 
-## 部署步骤（约 10 分钟）
+## 第 3 步：首次访问，自动灌数据
 
-### 1. 把代码推到 GitHub
+部署完成后直接打开你的网址。服务器启动时会**自动**把 24 节课、72 道题、会员套餐、管理员账号灌进数据库（幂等，不会重复）。
+如果数据库是空的，等 1–2 分钟再刷新即可。
 
-如果你还没有 GitHub 仓库：
+管理员默认账号：
+- 邮箱：`admin@learnchinese.app`
+- 密码：`admin123456`（**上线后请在第 2 步用 `ADMIN_PASSWORD` 改掉**）
 
-```bash
-git init
-git add .
-git commit -m "LearnChinese ready for production"
-# 在 GitHub 创建新仓库，然后：
-git remote add origin https://github.com/你的用户名/learnchinese.git
-git push -u origin main
-```
+---
 
-### 2. 注册/登录 Render
+## 第 4 步：收款二维码（已内置）
 
-访问 https://render.com ，用 GitHub 账号登录。
-
-### 3. 一键部署（Blueprint）
-
-1. 在 Render Dashboard 点击 **New +** → **Blueprint**
-2. 选择你的 GitHub 仓库
-3. Render 会自动读取 `render.yaml`
-4. 给服务起个名字（默认 `learnchinese`）
-5. 点击 **Apply**
-
-Render 会自动：
-- 创建 Web Service（免费）
-- 创建 MongoDB 数据库（免费）
-- 运行 `npm install && npm run build`
-- 启动 Node.js 后端
-
-### 4. 设置管理员账号
-
-部署完成后，打开 Render 提供的网址，例如：
-
-```
-https://learnchinese.onrender.com
-```
-
-首次需要创建管理员账号。有两种方式：
-
-**方式 A：环境变量里预设（推荐）**
-
-在 Render Dashboard → 你的 Web Service → **Environment** 里添加：
-
-```
-ADMIN_EMAIL=admin@learnchinese.app
-ADMIN_PASSWORD=你的强密码
-JWT_SECRET=随机长字符串（至少32位）
-```
-
-然后重新部署。
-
-**方式 B：用 seed 脚本**
-
-在 Render Shell 里运行：
-
-```bash
-cd server
-node src/seed/seed.js
-```
-
-默认管理员：`admin@learnchinese.app` / `admin123456`（**生产环境请务必修改**）。
-
-### 5. 上传你的收款二维码
-
-项目里已经放了你的支付宝/微信收款码：
-
+你的支付宝/微信个人收款码已经在项目里：
 - `client/public/qr/alipay.jpg`
 - `client/public/qr/wechat.jpg`
 
-如果以后换二维码，直接替换这两个文件，重新提交并部署。
-
-### 6. 配置真实支付宝/微信商户（可选）
-
-当前是个人收款码模式：用户扫码 → 你收到钱 → 你在后台点"确认收款并开通"。
-
-如果想升级为自动回调（无需人工审核），需要申请企业/个体工商户支付宝/微信商户，然后在 Render 环境变量里填写：
-
-```
-ALIPAY_APP_ID=...
-ALIPAY_PRIVATE_KEY=...
-ALIPAY_PUBLIC_KEY=...
-WECHAT_APPID=...
-WECHAT_MCHID=...
-WECHAT_API_V3_KEY=...
-WECHAT_SERIAL_NO=...
-```
-
-填了真实商户配置后，支付会自动走官方接口，无需人工审核。
+要换码：替换这两个文件 → 提交 → 重新部署。
 
 ---
 
-## 日常运营流程
+## 日常运营（你只做这些）
 
-### 用户购买会员
-
-1. 用户访问 `/pricing`
-2. 选择套餐 → 选择支付宝/微信
-3. 扫码支付
-4. 点击"我已支付"，填写姓名/备注
-5. 订单进入后台"待核实"
-
-### 你在后台确认收款
-
-1. 登录管理员账号
-2. 进入 `/admin/orders`
-3. 在"Awaiting confirm"标签下看到订单
-4. 确认你支付宝/微信里收到了对应金额
-5. 点击 **Verify & activate** → 用户会员立即开通
-
-### 查看营收
-
-`/admin` 首页会显示：
-- 有效会员数
-- 已支付订单数
-- 总营收（美元）
+1. 用户在前台 `/pricing` 选套餐 → 扫你的收款码 → 点"我已支付"
+2. 你打开支付宝/微信确认收到钱
+3. 登录管理员 → `/admin/orders` → 点 **Verify & activate** → 用户会员立刻开通
+4. `/admin` 看营收（会员数 / 订单数 / 总金额）
 
 ---
 
-## 域名（可选）
+## 想升级为自动收款（可选，需营业执照）
 
-Render 默认提供 `https://learnchinese.onrender.com` 免费二级域名。
-
-如果你以后买了自己的域名：
-
-1. 在 Render Dashboard → **Custom Domains** 添加域名
-2. 在域名 DNS 添加 CNAME 记录指向 Render
-3. 修改环境变量 `CLIENT_URL` 为你的域名
-4. 重新部署
+当前是"个人收款码 + 人工审核"。若有企业/个体户资质，可申请支付宝/微信商户，
+在 Render 环境变量填 `ALIPAY_*` / `WECHAT_*` 后自动回调，无需人工审核。
 
 ---
 
 ## 安全提醒
 
-1. **生产环境务必修改 `JWT_SECRET`**，不要用默认值
-2. **修改默认管理员密码**
-3. **不要泄露 `.env` 文件**
-4. 支付宝/微信私钥等敏感信息只填在 Render 环境变量里，不要提交到代码仓库
+1. `JWT_SECRET` 必须用强随机值，别用默认
+2. 改掉默认管理员密码
+3. 私钥/密码只填在 Render 环境变量，**不要**写进代码或 `.env` 提交
